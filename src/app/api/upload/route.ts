@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
 
     // TÂCHE 1 — Rate limiting (5 requêtes / 60s)
     const { rateLimit } = await import("@/lib/rate-limit")
-    const rl = rateLimit(rateLimitIdentifier, 5, 60_000)
+    const rl = await rateLimit(rateLimitIdentifier, 5, 60_000)
     if (!rl.success) {
       return NextResponse.json(
         { error: "Trop de requêtes. Réessayez dans une minute." },
@@ -60,8 +60,18 @@ export async function POST(request: NextRequest) {
       })
 
     if (uploadError) {
-      console.error("Storage upload error:", uploadError)
-      return NextResponse.json({ error: "Erreur lors du téléchargement du fichier." }, { status: 500 })
+      console.error("Storage upload error detail:", uploadError.message)
+      
+      let clientErrorMessage = "Erreur lors du téléchargement du fichier."
+      if (uploadError.message.includes("bucket not found")) {
+        clientErrorMessage = "Configuration serveur incorrecte (bucket manquant)."
+      } else if (uploadError.message.includes("Payload Too Large") || uploadError.message.includes("413")) {
+        clientErrorMessage = "Le fichier est trop volumineux."
+      } else if (uploadError.message.includes("permission denied")) {
+        clientErrorMessage = "Permissions insuffisantes pour uploader."
+      }
+
+      return NextResponse.json({ error: clientErrorMessage }, { status: 500 })
     }
 
     // Création de l'entrée dans la table 'orders'

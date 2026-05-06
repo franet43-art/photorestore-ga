@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
 
     // TÂCHE 1 — Rate limiting (3 requêtes / 60s)
     const { rateLimit } = await import("@/lib/rate-limit")
-    const rl = rateLimit(user?.id || guestId || "anonymous", 3, 60_000)
+    const rl = await rateLimit(user?.id || guestId || "anonymous", 3, 60_000)
     if (!rl.success) {
       return NextResponse.json(
         { error: "Trop de requêtes. Réessayez dans une minute." },
