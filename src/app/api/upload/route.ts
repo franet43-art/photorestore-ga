@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     // Validation Zod côté serveur
     const validationResult = photoSchema.safeParse({ file })
     if (!validationResult.success) {
-      const errorMessage = validationResult.error.errors[0]?.message || "Fichier invalide."
+      const errorMessage = validationResult.error.issues[0]?.message || "Fichier invalide."
       return NextResponse.json({ error: errorMessage }, { status: 400 })
     }
 
