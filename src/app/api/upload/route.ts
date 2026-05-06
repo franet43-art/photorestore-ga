@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
       guestId = crypto.randomUUID()
     }
 
-    const rateLimitIdentifier = user?.id || guestId || request.ip || "anonymous"
+    const rateLimitIdentifier = user?.id || guestId || request.headers.get('x-forwarded-for') || "anonymous"
 
     // TÂCHE 1 — Rate limiting (5 requêtes / 60s)
     const { rateLimit } = await import("@/lib/rate-limit")
