@@ -35,7 +35,7 @@ export default function Dropzone() {
     // Validation client-side avec Zod
     const validationResult = photoSchema.safeParse({ file })
     if (!validationResult.success) {
-      setErrorMessage(validationResult.error.errors[0]?.message || "Fichier invalide.")
+      setErrorMessage(validationResult.error.issues[0]?.message || "Fichier invalide.")
       setDragState("error")
       return
     }
