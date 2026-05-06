@@ -1,20 +1,27 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { photoSchema } from "@/lib/validators/photo"
+import { cookies } from "next/headers"
 
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createSupabaseServerClient()
     const { data: { user } } = await supabase.auth.getUser()
+    const cookieStore = await cookies()
+    
+    let guestId = cookieStore.get("guest_id")?.value
+    const isGuest = !user
 
-    // Vérification de la session
-    if (!user) {
-      return NextResponse.json({ error: "Non autorisé." }, { status: 401 })
+    // Si pas de user et pas de guestId, on en génère un
+    if (isGuest && !guestId) {
+      guestId = crypto.randomUUID()
     }
+
+    const rateLimitIdentifier = user?.id || guestId || request.ip || "anonymous"
 
     // TÂCHE 1 — Rate limiting (5 requêtes / 60s)
     const { rateLimit } = await import("@/lib/rate-limit")
-    const rl = rateLimit(user.id, 5, 60_000)
+    const rl = rateLimit(rateLimitIdentifier, 5, 60_000)
     if (!rl.success) {
       return NextResponse.json(
         { error: "Trop de requêtes. Réessayez dans une minute." },
@@ -39,7 +46,10 @@ export async function POST(request: NextRequest) {
     const validFile = validationResult.data.file
     const ext = validFile.name.split('.').pop()
     const uniqueFilename = `${crypto.randomUUID()}.${ext}`
-    const uploadPath = `${user.id}/${uniqueFilename}`
+    
+    // Chemin de stockage : dossier user ou dossier guest
+    const ownerId = user?.id || `guest_${guestId}`
+    const uploadPath = `${ownerId}/${uniqueFilename}`
 
     // Upload vers Supabase Storage bucket 'uploads'
     const { error: uploadError } = await supabase.storage
@@ -58,7 +68,8 @@ export async function POST(request: NextRequest) {
     const { data: orderData, error: dbError } = await supabase
       .from("orders")
       .insert({
-        user_id: user.id,
+        user_id: user?.id || null,
+        guest_id: isGuest ? guestId : null,
         status: "uploaded",
         original_filename: validFile.name,
         upload_path: uploadPath,
@@ -73,7 +84,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Erreur lors de la création de la commande." }, { status: 500 })
     }
 
-    return NextResponse.json({ orderId: orderData.id, uploadPath }, { status: 200 })
+    const response = NextResponse.json({ orderId: orderData.id, uploadPath }, { status: 200 })
+
+    // Si on a généré un nouveau guestId, on le fixe dans le cookie
+    if (isGuest && !cookieStore.has("guest_id")) {
+      response.cookies.set("guest_id", guestId!, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 60 * 60 * 24 * 7, // 7 jours
+        path: "/",
+      })
+    }
+
+    return response
 
   } catch (error) {
     console.error("Upload handler error:", error)

@@ -1,12 +1,16 @@
 "use client"
 
 import { useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function LoginForm() {
+  const searchParams = useSearchParams()
+  const next = searchParams.get("next") || "/dashboard"
+  
   const [email, setEmail] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSent, setIsSent] = useState(false)
@@ -23,7 +27,7 @@ export default function LoginForm() {
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/confirm?next=/dashboard`,
+          emailRedirectTo: `${window.location.origin}/auth/confirm?next=${encodeURIComponent(next)}`,
         },
       })
 

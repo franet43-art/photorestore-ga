@@ -43,8 +43,6 @@ export async function middleware(request: NextRequest) {
   // Définition des routes
   const isProtectedRoute = 
     path.startsWith('/dashboard') ||
-    path.startsWith('/upload') ||
-    path.startsWith('/preview') ||
     path.startsWith('/success') ||
     path.startsWith('/admin')
     

@@ -12,12 +12,26 @@ interface ResultCardProps {
   label: string;
 }
 
+import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+
 export default function ResultCard({ imageUrl, resultNumber, orderId, label }: ResultCardProps) {
   const [isLoading, setIsLoading] = useState<string | null>(null);
+  const supabase = createSupabaseBrowserClient();
 
   const handleUnlock = async (formula: "standard" | "color") => {
     setIsLoading(formula);
+    
     try {
+      // 1. Vérifier si l'utilisateur est connecté
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        // Rediriger vers login avec retour vers cette page
+        window.location.href = `/login?next=${encodeURIComponent(`/preview/${orderId}`)}`;
+        return;
+      }
+
+      // 2. Procéder au paiement
       const res = await fetch("/api/payment/initiate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
