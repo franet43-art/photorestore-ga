@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse, unstable_after as after } from "next/server"
+import { NextRequest, NextResponse, after } from "next/server"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { photoSchema } from "@/lib/validators/photo"
 import { cookies } from "next/headers"
