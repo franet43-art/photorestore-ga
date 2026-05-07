@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextRequest, NextResponse, unstable_after as after } from "next/server"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { photoSchema } from "@/lib/validators/photo"
 import { cookies } from "next/headers"
@@ -113,6 +113,23 @@ export async function POST(request: NextRequest) {
         path: "/",
       })
     }
+
+    // Déclenchement de la restauration après la réponse au client
+    after(async () => {
+      const baseUrl = request.nextUrl.origin
+      try {
+        await fetch(`${baseUrl}/api/restore`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Cookie": request.headers.get("cookie") || ""
+          },
+          body: JSON.stringify({ orderId: orderData.id })
+        })
+      } catch (err) {
+        console.error("Erreur trigger restore:", err)
+      }
+    })
 
     return response
 
