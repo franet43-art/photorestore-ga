@@ -114,22 +114,16 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Déclenchement de la restauration après la réponse au client
-    after(async () => {
-      const baseUrl = request.nextUrl.origin
-      try {
-        await fetch(`${baseUrl}/api/restore`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Cookie": request.headers.get("cookie") || ""
-          },
-          body: JSON.stringify({ orderId: orderData.id })
-        })
-      } catch (err) {
-        console.error("Erreur trigger restore:", err)
-      }
-    })
+    // Fire-and-forget vers /api/restore
+    const baseUrl = request.nextUrl.origin
+    fetch(`${baseUrl}/api/restore`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Cookie": request.headers.get("cookie") || ""
+      },
+      body: JSON.stringify({ orderId: orderData.id })
+    }).catch(err => console.error("Erreur trigger restore:", err))
 
     return response
 

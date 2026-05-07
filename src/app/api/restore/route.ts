@@ -42,16 +42,16 @@ export async function POST(request: NextRequest) {
     globalOrderId = orderId;
 
     // 3. Vérifier que l'order appartient à l'user OU au guest et a status 'uploaded'
-    const query = supabase
+    let query = supabase
       .from("orders")
       .select("*")
       .eq("id", orderId)
       .eq("status", "uploaded")
 
     if (user) {
-      query.eq("user_id", user.id)
+      query = query.eq("user_id", user.id)
     } else if (guestId) {
-      query.eq("guest_id", guestId)
+      query = query.eq("guest_id", guestId)
     } else {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
     }
