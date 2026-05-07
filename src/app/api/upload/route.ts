@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { photoSchema } from "@/lib/validators/photo"
 import { cookies } from "next/headers"
+import { createClient } from "@supabase/supabase-js"
+
+export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
   try {
@@ -52,7 +55,12 @@ export async function POST(request: NextRequest) {
     const uploadPath = `${ownerId}/${uniqueFilename}`
 
     // Upload vers Supabase Storage bucket 'uploads'
-    const { error: uploadError } = await supabase.storage
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    const { error: uploadError } = await supabaseAdmin.storage
       .from("uploads")
       .upload(uploadPath, validFile, {
         cacheControl: "3600",
@@ -90,7 +98,7 @@ export async function POST(request: NextRequest) {
     if (dbError) {
       console.error("Database insert error:", dbError)
       // Nettoyage du fichier orphelin en cas d'erreur BDD
-      await supabase.storage.from("uploads").remove([uploadPath])
+      await supabaseAdmin.storage.from("uploads").remove([uploadPath])
       return NextResponse.json({ error: "Erreur lors de la création de la commande." }, { status: 500 })
     }
 
