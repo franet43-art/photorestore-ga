@@ -7,21 +7,30 @@ export async function GET(
 ) {
   try {
     const supabase = await createSupabaseServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    // Récupération dynamique des paramètres pour Next.js 16
+    const { id: orderId } = await params
 
-    if (!user) {
+    const { data: { user } } = await supabase.auth.getUser()
+    const guestId = request.cookies.get('guest_id')?.value
+
+    // Ni user authentifié ni guest cookie → rejet
+    if (!user && !guestId) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
     }
 
-    // Récupération dynamique des paramètres pour Next.js 16
-    const { id } = await params
+    // Construire la query selon le type de visiteur
+    let query = supabase
+      .from('orders')
+      .select('status, preview_a_path, preview_b_path')
+      .eq('id', orderId)
 
-    const { data: order, error } = await supabase
-      .from("orders")
-      .select("status, preview_a_path, preview_b_path")
-      .eq("id", id)
-      .eq("user_id", user.id)
-      .single()
+    if (user) {
+      query = query.eq('user_id', user.id)
+    } else {
+      query = query.eq('guest_id', guestId)
+    }
+
+    const { data: order, error } = await query.single()
 
     if (error || !order) {
       return NextResponse.json({ error: "Commande introuvable" }, { status: 404 })
