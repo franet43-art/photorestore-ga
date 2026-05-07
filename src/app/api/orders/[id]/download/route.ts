@@ -7,20 +7,28 @@ export async function GET(
 ) {
   try {
     const supabase = await createSupabaseServerClient();
+    const { id: orderId } = await params;
     const { data: { user } } = await supabase.auth.getUser();
+    const guestId = request.cookies.get('guest_id')?.value;
 
-    if (!user) {
+    // Ni user authentifié ni guest cookie → rejet
+    if (!user && !guestId) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
-    const { id } = await params;
-
-    const { data: order, error } = await supabase
+    // Construire la query selon le type de visiteur
+    let query = supabase
       .from("orders")
       .select("*")
-      .eq("id", id)
-      .eq("user_id", user.id)
-      .single();
+      .eq("id", orderId);
+
+    if (user) {
+      query = query.eq("user_id", user.id);
+    } else {
+      query = query.eq("guest_id", guestId);
+    }
+
+    const { data: order, error } = await query.single();
 
     if (error || !order) {
       return NextResponse.json({ error: "Commande introuvable" }, { status: 404 });
