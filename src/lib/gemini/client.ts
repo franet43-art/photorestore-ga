@@ -41,7 +41,7 @@ export async function restoreImage(
       size: "1024x1024",
     })
 
-    const imageUrl = response.data[0]?.url
+    const imageUrl = response.data?.[0]?.url
     if (!imageUrl) throw new Error("OpenAI: pas d'URL dans la réponse")
 
     const imageResponse = await fetch(imageUrl)
