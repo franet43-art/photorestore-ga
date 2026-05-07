@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse, after } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { photoSchema } from "@/lib/validators/photo"
 import { cookies } from "next/headers"
@@ -113,17 +113,6 @@ export async function POST(request: NextRequest) {
         path: "/",
       })
     }
-
-    // Fire-and-forget vers /api/restore
-    const baseUrl = request.nextUrl.origin
-    fetch(`${baseUrl}/api/restore`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Cookie": request.headers.get("cookie") || ""
-      },
-      body: JSON.stringify({ orderId: orderData.id })
-    }).catch(err => console.error("Erreur trigger restore:", err))
 
     return response
 
