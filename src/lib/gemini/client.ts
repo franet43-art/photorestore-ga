@@ -11,7 +11,7 @@ export async function restoreImage(
 
     const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY)
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash-preview-image-generation",
+      model: "gemini-3.1-flash-image-preview",
       generationConfig: {
         responseModalities: ["IMAGE", "TEXT"],
       } as any,
