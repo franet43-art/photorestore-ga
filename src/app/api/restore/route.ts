@@ -57,20 +57,24 @@ export async function POST(request: NextRequest) {
     }
 
     const { data: order, error: orderError } = await query.single()
-
     if (orderError || !order) {
+      console.error("Restore Error: Order not found or ownership mismatch", { orderId, error: orderError })
       return NextResponse.json({ error: "Commande introuvable ou accès refusé" }, { status: 403 })
     }
+
+    console.log("Restore: Processing order", orderId)
 
     // 4. Mettre à jour status → 'processing'
     await supabase.from("orders").update({ status: 'processing' }).eq("id", orderId)
 
     // 5. Récupérer le fichier depuis Supabase Storage
+    console.log("Restore: Downloading source file", order.upload_path)
     const { data: fileData, error: downloadError } = await supabase.storage
       .from("uploads")
       .download(order.upload_path)
 
     if (downloadError || !fileData) {
+      console.error("Restore Error: Download failed", downloadError)
       throw new Error("Impossible de télécharger l'image source.")
     }
 
@@ -80,6 +84,7 @@ export async function POST(request: NextRequest) {
     const promptConservative = formula === 'color' ? PROMPT_CONSERVATIVE_COLOR : PROMPT_CONSERVATIVE
     const promptCreative = formula === 'color' ? PROMPT_CREATIVE_COLOR : PROMPT_CREATIVE
 
+    console.log("Restore: Calling Gemini AI with formula", formula)
     const results = await Promise.allSettled([
       restoreImage(imageBuffer, promptConservative),
       restoreImage(imageBuffer, promptCreative),
@@ -87,6 +92,13 @@ export async function POST(request: NextRequest) {
 
     const resultA = results[0]
     const resultB = results[1]
+
+    console.log("Restore: Gemini results", { 
+      A: resultA.status, 
+      B: resultB.status,
+      errorA: resultA.status === 'rejected' ? resultA.reason : null,
+      errorB: resultB.status === 'rejected' ? resultB.reason : null
+    })
 
     // 7. Vérifier les résultats
     if (resultA.status === 'rejected' && resultB.status === 'rejected') {
@@ -138,7 +150,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ orderId, previewAUrl, previewBUrl }, { status: 200 })
 
   } catch (error: any) {
-    console.error("Restore handler unexpected error:", error)
+    console.error("Restore handler CRITICAL error:", {
+      message: error.message,
+      stack: error.stack,
+      cause: error.cause,
+      code: error.code,
+      globalOrderId
+    })
     if (globalOrderId) {
       try {
         const supabase = await createSupabaseServerClient()
