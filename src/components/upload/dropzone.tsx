@@ -83,11 +83,14 @@ export default function Dropzone() {
           const response = JSON.parse(xhr.responseText)
           if (response.orderId) {
             // Déclenchement manuel de la restauration depuis le frontend
-            await fetch('/api/restore', {
+            const restoreRes = await fetch('/api/restore', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ orderId: response.orderId })
             })
+            const restoreData = await restoreRes.json()
+            console.log('RESTORE RESPONSE:', JSON.stringify(restoreData, null, 2))
+            
             router.push(`/preview/${response.orderId}`)
           } else {
             throw new Error("ID de commande manquant.")

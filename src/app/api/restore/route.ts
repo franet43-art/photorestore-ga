@@ -103,7 +103,13 @@ export async function POST(request: NextRequest) {
     // 7. Vérifier les résultats
     if (resultA.status === 'rejected' && resultB.status === 'rejected') {
       await supabase.from("orders").update({ status: 'failed' }).eq("id", orderId)
-      return NextResponse.json({ error: "La restauration a échoué." }, { status: 500 })
+      return NextResponse.json({ 
+        error: "La restauration a échoué.",
+        debug: {
+          errorA: resultA.status === 'rejected' ? String(resultA.reason) : null,
+          errorB: resultB.status === 'rejected' ? String(resultB.reason) : null,
+        }
+      }, { status: 500 })
     }
 
     const updates: any = { status: 'preview_ready' }
@@ -166,11 +172,19 @@ export async function POST(request: NextRequest) {
 
     if (error.message === "QUOTA_EXCEEDED") {
       return NextResponse.json(
-        { error: "Le service est temporairement indisponible. Réessayez dans quelques heures." },
+        { error: "Le service est temporairement indisponible. Réessayez dans une minute." },
         { status: 503 }
       )
     }
 
-    return NextResponse.json({ error: "Une erreur inattendue est survenue." }, { status: 500 })
+    return NextResponse.json({ 
+      error: "Une erreur inattendue est survenue.",
+      debug: {
+        message: error.message,
+        stack: error.stack?.split('\n').slice(0, 5),
+        code: error.code,
+        cause: error.cause?.message || String(error.cause)
+      }
+    }, { status: 500 })
   }
 }
