@@ -82,22 +82,19 @@ export async function POST(request: NextRequest) {
 
     // 6. Lancer Promise.allSettled
     const promptConservative = formula === 'color' ? PROMPT_CONSERVATIVE_COLOR : PROMPT_CONSERVATIVE
-    const promptCreative = formula === 'color' ? PROMPT_CREATIVE_COLOR : PROMPT_CREATIVE
 
-    console.log("Restore: Calling Gemini AI with formula", formula)
+    // UN SEUL appel au lieu de deux — économie de 50% des crédits
+    console.log("Restore: Calling OpenAI with prompt QUALITY")
     const results = await Promise.allSettled([
-      restoreImage(imageBuffer, promptConservative),
-      restoreImage(imageBuffer, promptCreative),
+      restoreImage(imageBuffer, PROMPT_CONSERVATIVE),
     ])
 
     const resultA = results[0]
-    const resultB = results[1]
+    const resultB = { status: 'rejected' as const, reason: 'single mode' }
 
-    console.log("Restore: Gemini results", { 
-      A: resultA.status, 
-      B: resultB.status,
+    console.log("Restore: OpenAI result", { 
+      A: resultA.status,
       errorA: resultA.status === 'rejected' ? resultA.reason : null,
-      errorB: resultB.status === 'rejected' ? resultB.reason : null
     })
 
     // 7. Vérifier les résultats
@@ -132,22 +129,6 @@ export async function POST(request: NextRequest) {
 
       const { data: publicUrlDataA } = supabase.storage.from('previews').getPublicUrl(previewPathA)
       previewAUrl = publicUrlDataA.publicUrl
-    }
-
-    if (resultB.status === 'fulfilled') {
-      const bufferB = resultB.value
-      const hdPathB = `${ownerId}/${orderId}/result_b.png`
-      const previewPathB = `${ownerId}/${orderId}/preview_b.png`
-
-      await supabase.storage.from('outputs').upload(hdPathB, bufferB, { contentType: 'image/png' })
-      updates.output_b_path = hdPathB
-
-      const watermarkedB = await applyWatermark(bufferB)
-      await supabase.storage.from('previews').upload(previewPathB, watermarkedB, { contentType: 'image/jpeg' })
-      updates.preview_b_path = previewPathB
-
-      const { data: publicUrlDataB } = supabase.storage.from('previews').getPublicUrl(previewPathB)
-      previewBUrl = publicUrlDataB.publicUrl
     }
 
     // 9. Mettre à jour l'order dans Supabase
