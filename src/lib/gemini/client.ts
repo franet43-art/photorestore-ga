@@ -28,32 +28,36 @@ export async function restoreImage(
     throw new Error("OPENAI_API_KEY non configurée")
   }
 
-  const tmpPath = path.join(os.tmpdir(), `restore_${Date.now()}.png`)
+  // Appel direct à l'API via fetch pour contourner le bug de validation
+  // du SDK openai-node qui rejette gpt-image-1 sur images.edit
+  const formData = new FormData()
+  formData.append("model", "gpt-image-1")
+  formData.append("prompt", prompt)
+  formData.append("n", "1")
+  formData.append("size", "1024x1024")
+  formData.append("response_format", "b64_json") // Ajout crucial manquant pour avoir b64
+  formData.append(
+    "image",
+    new Blob([imageBuffer], { type: "image/png" }),
+    "photo.png"
+  )
 
-  try {
-    fsSync.writeFileSync(tmpPath, imageBuffer)
+  const response = await fetch("https://api.openai.com/v1/images/edits", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+    },
+    body: formData as any, // Cast to any because TS DOM types for fetch body with FormData can be strict
+  })
 
-    const imageFile = await toFile(
-      fsSync.createReadStream(tmpPath),
-      "photo.png",
-      { type: "image/png" }
-    )
-
-    const response = await openai.images.edit({
-      model: "gpt-image-1",
-      image: imageFile,
-      prompt: prompt,
-      n: 1,
-      size: "1024x1024",
-      response_format: "b64_json",
-    } as any)
-
-    const b64 = response.data?.[0]?.b64_json
-    if (!b64) throw new Error("OpenAI: aucune image dans la réponse")
-
-    return Buffer.from(b64, "base64")
-
-  } finally {
-    if (fsSync.existsSync(tmpPath)) fsSync.unlinkSync(tmpPath)
+  if (!response.ok) {
+    const errorBody = await response.text()
+    throw new Error(`OpenAI API error ${response.status}: ${errorBody}`)
   }
+
+  const data = await response.json()
+  const b64 = data?.data?.[0]?.b64_json
+  if (!b64) throw new Error("OpenAI: aucune image dans la réponse")
+
+  return Buffer.from(b64, "base64")
 }
