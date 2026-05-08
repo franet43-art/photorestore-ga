@@ -28,14 +28,9 @@ export async function restoreImage(
     throw new Error("OPENAI_API_KEY non configurée")
   }
 
-  // Appel direct à l'API via fetch pour contourner le bug de validation
-  // du SDK openai-node qui rejette gpt-image-1 sur images.edit
   const formData = new FormData()
   formData.append("model", "gpt-image-1")
   formData.append("prompt", prompt)
-  formData.append("n", "1")
-  formData.append("size", "1024x1024")
-  formData.append("response_format", "b64_json") // Ajout crucial manquant pour avoir b64
   formData.append(
     "image",
     new Blob([new Uint8Array(imageBuffer)], { type: "image/png" }),
@@ -47,7 +42,7 @@ export async function restoreImage(
     headers: {
       Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
     },
-    body: formData as any, // Cast to any because TS DOM types for fetch body with FormData can be strict
+    body: formData as any,
   })
 
   if (!response.ok) {
