@@ -36,28 +36,25 @@ export async function GET(
       return NextResponse.json({ error: "Commande introuvable" }, { status: 404 })
     }
 
-    let previewAUrl = null
-    let previewBUrl = null
-
-    // Générer les URLs publiques pour les previews existantes
-    if (order.preview_a_path) {
-      const { data } = supabase.storage.from('previews').getPublicUrl(order.preview_a_path)
-      previewAUrl = data.publicUrl
+    function buildPreviewUrl(path: string | null): string | null {
+      if (!path) return null
+      // Si c'est déjà une URL complète
+      if (path.startsWith('http')) return path
+      // Construire manuellement
+      const base = process.env.NEXT_PUBLIC_SUPABASE_URL
+      return `${base}/storage/v1/object/public/previews/${path}`
     }
 
-    if (order.preview_b_path) {
-      const { data } = supabase.storage.from('previews').getPublicUrl(order.preview_b_path)
-      previewBUrl = data.publicUrl
-    }
+    console.log('DEBUG status route:', {
+      preview_a_path: order.preview_a_path,
+      previewAUrl: buildPreviewUrl(order.preview_a_path),
+      SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'DEFINED' : 'UNDEFINED',
+    })
 
     return NextResponse.json({
       status: order.status,
-      previewAUrl: order.preview_a_path
-        ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/previews/${order.preview_a_path}`
-        : null,
-      previewBUrl: order.preview_b_path
-        ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/previews/${order.preview_b_path}`
-        : null,
+      previewAUrl: buildPreviewUrl(order.preview_a_path),
+      previewBUrl: buildPreviewUrl(order.preview_b_path),
     }, { status: 200 })
 
   } catch (error: any) {
