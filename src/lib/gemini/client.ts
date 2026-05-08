@@ -41,7 +41,6 @@ export async function restoreImage(
       prompt: prompt,
       n: 1,
       size: "1024x1024",
-      quality: "low",
       response_format: "b64_json",
     } as any)
 
