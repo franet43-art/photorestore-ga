@@ -52,8 +52,12 @@ export async function GET(
 
     return NextResponse.json({
       status: order.status,
-      previewAUrl,
-      previewBUrl
+      previewAUrl: order.preview_a_path
+        ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/previews/${order.preview_a_path}`
+        : null,
+      previewBUrl: order.preview_b_path
+        ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/previews/${order.preview_b_path}`
+        : null,
     }, { status: 200 })
 
   } catch (error: any) {
