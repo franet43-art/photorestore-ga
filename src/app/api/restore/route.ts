@@ -4,6 +4,12 @@ import { NextRequest, NextResponse } from "next/server"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { restoreImage } from "@/lib/gemini/client"
 import { applyWatermark } from "@/lib/watermark"
+import { createClient } from "@supabase/supabase-js"
+
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 import { cookies } from "next/headers"
 import {
   PROMPT_CONSERVATIVE,
@@ -120,11 +126,11 @@ export async function POST(request: NextRequest) {
       const hdPathA = `${ownerId}/${orderId}/result_a.png`
       const previewPathA = `${ownerId}/${orderId}/preview_a.png`
 
-      await supabase.storage.from('outputs').upload(hdPathA, bufferA, { contentType: 'image/png' })
+      await supabaseAdmin.storage.from('outputs').upload(hdPathA, bufferA, { contentType: 'image/png' })
       updates.output_a_path = hdPathA
 
       const watermarkedA = await applyWatermark(bufferA)
-      await supabase.storage.from('previews').upload(previewPathA, watermarkedA, { contentType: 'image/jpeg' })
+      await supabaseAdmin.storage.from('previews').upload(previewPathA, watermarkedA, { contentType: 'image/jpeg' })
       updates.preview_a_path = previewPathA
 
       previewAUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/previews/${previewPathA}`
