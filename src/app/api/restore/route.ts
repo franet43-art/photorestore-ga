@@ -127,8 +127,7 @@ export async function POST(request: NextRequest) {
       await supabase.storage.from('previews').upload(previewPathA, watermarkedA, { contentType: 'image/jpeg' })
       updates.preview_a_path = previewPathA
 
-      const { data: publicUrlDataA } = supabase.storage.from('previews').getPublicUrl(previewPathA)
-      previewAUrl = publicUrlDataA.publicUrl
+      previewAUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/previews/${previewPathA}`
     }
 
     // 9. Mettre à jour l'order dans Supabase
