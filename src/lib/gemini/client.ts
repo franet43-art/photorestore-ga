@@ -38,7 +38,7 @@ export async function restoreImage(
   formData.append("response_format", "b64_json") // Ajout crucial manquant pour avoir b64
   formData.append(
     "image",
-    new Blob([imageBuffer], { type: "image/png" }),
+    new Blob([new Uint8Array(imageBuffer)], { type: "image/png" }),
     "photo.png"
   )
 
