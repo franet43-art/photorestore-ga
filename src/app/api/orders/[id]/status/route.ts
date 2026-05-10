@@ -40,9 +40,8 @@ export async function GET(
       if (!path) return null
       // Si c'est déjà une URL complète
       if (path.startsWith('http')) return path
-      // Construire manuellement
-      const base = process.env.NEXT_PUBLIC_SUPABASE_URL
-      return `${base}/storage/v1/object/public/previews/${path}`
+      
+      return supabase.storage.from('previews').getPublicUrl(path).data.publicUrl
     }
 
     console.log('DEBUG status route:', {
