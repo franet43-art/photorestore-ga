@@ -53,19 +53,27 @@ export default function ResultCard({ imageUrl, resultNumber, orderId, label }: R
   };
 
   return (
-    <Card className="overflow-hidden border-slate-200 shadow-xl transition-all hover:shadow-2xl flex flex-col">
+    <Card className="overflow-hidden border-slate-200 shadow-xl transition-all hover:shadow-2xl flex flex-col select-none">
       <CardHeader className="bg-slate-50 border-b border-slate-200">
         <CardTitle className="text-lg font-semibold text-slate-800">{label}</CardTitle>
       </CardHeader>
-      <CardContent className="p-0 relative aspect-square bg-slate-100">
+      <CardContent 
+        className="p-0 relative aspect-square bg-slate-100"
+        onContextMenu={(e) => e.preventDefault()}
+      >
         <Image 
           src={imageUrl} 
           alt={label} 
           fill 
           className="object-contain p-4"
           sizes="(max-width: 768px) 100vw, 50vw"
+          draggable={false}
+          onDragStart={(e) => e.preventDefault()}
         />
-        <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded text-[10px] text-white font-bold tracking-widest uppercase">
+        {/* Overlay invisible pour bloquer les interactions directes */}
+        <div className="absolute inset-0 z-10 pointer-events-none" />
+        
+        <div className="absolute bottom-4 right-4 z-20 bg-black/60 backdrop-blur-md px-3 py-1 rounded text-[10px] text-white font-bold tracking-widest uppercase">
           Aperçu Watermarqué
         </div>
       </CardContent>

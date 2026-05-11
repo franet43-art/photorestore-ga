@@ -1,6 +1,7 @@
-import { PROMPT_QUALITY, PROMPT_STANDARD } from "./client"
+export const PROMPT_CONSERVATIVE = "Professional photo restoration of an old damaged photograph. Preserve every original detail, facial features, clothing texture, and background elements. Remove scratches, tears, stains, dust spots, and physical damage with surgical precision. Reconstruct missing or blurred facial features using photorealistic techniques matching the original era. Enhance sharpness and contrast naturally without altering the original photographic style. Maintain original grain, film texture, and tonal range. Do not add modern effects, do not change colors unless requested, preserve the authentic vintage character. Output maximum detail and fidelity."
 
-export const PROMPT_CONSERVATIVE = PROMPT_QUALITY
-export const PROMPT_CREATIVE = PROMPT_STANDARD
-export const PROMPT_CONSERVATIVE_COLOR = PROMPT_QUALITY
-export const PROMPT_CREATIVE_COLOR = PROMPT_STANDARD
+export const PROMPT_CONSERVATIVE_COLOR = "Professional photo restoration and colorization of an old black-and-white or faded photograph. First restore all physical damage: remove scratches, tears, stains, dust. Then apply historically accurate colorization: natural skin tones, realistic clothing colors, authentic background hues matching the photographic era. Preserve original composition, facial features, and photographic grain. Do not oversaturate. Maintain the dignity and authenticity of the original moment. Output maximum detail and fidelity."
+
+export const PROMPT_CREATIVE = "Artistic restoration of an old photograph with enhanced clarity and vibrancy. Remove all physical damage, scratches, and fading. Sharpen details, enhance facial features with natural photorealism. Boost colors slightly for a more vivid but still authentic look. Preserve the original composition and era feel while making the image visually striking. Output clean, sharp, high-fidelity restoration."
+
+export const PROMPT_CREATIVE_COLOR = "Artistic restoration and colorization of an old photograph. Remove damage, scratches, and fading. Apply natural, era-appropriate colors with slightly enhanced vibrancy. Sharpen details and enhance facial features. Preserve original composition while giving the image a warm, vivid, lifelike appearance. Output clean, sharp, high-fidelity restoration with natural colorization."

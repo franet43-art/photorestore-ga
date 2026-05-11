@@ -7,19 +7,6 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 })
 
-export const PROMPT_QUALITY = `You are a professional photo restoration specialist. 
-Restore this damaged or aged photograph by:
-- Removing all scratches, tears, stains, spots and physical damage
-- Reconstructing blurred or degraded facial features with photorealistic precision
-- Enhancing overall sharpness, contrast and clarity
-- Correcting color fading: restore natural skin tones, clothing colors and backgrounds
-- Preserving the original composition, era and authenticity of the photo
-Deliver a clean, sharp, high-fidelity restoration that looks like the original undamaged photo.`
-
-export const PROMPT_STANDARD = `Restore this old photo: remove scratches and damage, 
-fix fading and discoloration, sharpen details, enhance faces. 
-Keep original composition. Output a clean restored version.`
-
 export async function restoreImage(
   imageBuffer: Buffer,
   prompt: string
@@ -31,6 +18,7 @@ export async function restoreImage(
   const formData = new FormData()
   formData.append("model", "gpt-image-1")
   formData.append("prompt", prompt)
+  formData.append("size", "1536x1536") // TODO: Vérifier si l'API edits supporte 1536x1536
   formData.append(
     "image",
     new Blob([new Uint8Array(imageBuffer)], { type: "image/png" }),
@@ -54,5 +42,16 @@ export async function restoreImage(
   const b64 = data?.data?.[0]?.b64_json
   if (!b64) throw new Error("OpenAI: aucune image dans la réponse")
 
-  return Buffer.from(b64, "base64")
+  const resultBuffer = Buffer.from(b64, "base64")
+  
+  // Log de la résolution pour debug
+  try {
+    const sharp = (await import("sharp")).default
+    const metadata = await sharp(resultBuffer).metadata()
+    console.log(`Restored image resolution: ${metadata.width}x${metadata.height}`)
+  } catch (e) {
+    console.log("Could not log restored image resolution")
+  }
+
+  return resultBuffer
 }
