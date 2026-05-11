@@ -90,7 +90,14 @@ export default function Dropzone() {
             })
             const restoreData = await restoreRes.json()
             console.log('RESTORE RESPONSE:', JSON.stringify(restoreData, null, 2))
-            
+
+            if (restoreRes.ok && restoreData.previewAUrl) {
+              sessionStorage.setItem(
+                `pr_restore_${restoreData.orderId}`,
+                JSON.stringify({ previewAUrl: restoreData.previewAUrl })
+              )
+            }
+
             router.push(`/preview/${response.orderId}`)
           } else {
             throw new Error("ID de commande manquant.")

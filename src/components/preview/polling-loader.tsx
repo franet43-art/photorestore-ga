@@ -13,11 +13,26 @@ export default function PollingLoader({ orderId }: PollingLoaderProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
+    const raw = sessionStorage.getItem(`pr_restore_${orderId}`)
+    if (raw) {
+      try {
+        const cached = JSON.parse(raw)
+        if (cached.previewAUrl) {
+          setPreviewUrl(cached.previewAUrl)
+          setStatus("preview_ready")
+          // NE PAS supprimer ici — on garde le cache jusqu'à confirmation polling
+        }
+      } catch (e) {}
+    }
+  }, [orderId]);
+
+  useEffect(() => {
     const startTime = Date.now();
     const timeout = 3 * 60 * 1000;
 
     const pollStatus = async () => {
       if (Date.now() - startTime > timeout) {
+        if (previewUrl) return; // Image déjà affichée, ne pas écraser
         setError("Le délai d'attente est dépassé. Veuillez rafraîchir la page ou réessayer plus tard.");
         return;
       }
@@ -28,6 +43,7 @@ export default function PollingLoader({ orderId }: PollingLoaderProps) {
         if (data.status === "preview_ready" && data.previewAUrl) {
           setPreviewUrl(data.previewAUrl);
           setStatus("preview_ready");
+          sessionStorage.removeItem(`pr_restore_${orderId}`); // ICI SEULEMENT
           return;
         }
         if (data.status === "failed") {

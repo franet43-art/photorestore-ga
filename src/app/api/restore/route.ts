@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
     // UN SEUL appel au lieu de deux — économie de 50% des crédits
     console.log("Restore: Calling OpenAI with prompt QUALITY")
     const results = await Promise.allSettled([
-      restoreImage(imageBuffer, PROMPT_CONSERVATIVE),
+      restoreImage(imageBuffer, promptConservative),
     ])
 
     const resultA = results[0]
@@ -133,11 +133,16 @@ export async function POST(request: NextRequest) {
       await supabaseAdmin.storage.from('previews').upload(previewPathA, watermarkedA, { contentType: 'image/jpeg' })
       updates.preview_a_path = previewPathA
 
-      previewAUrl = supabaseAdmin.storage.from('previews').getPublicUrl(previewPathA).data.publicUrl
+      previewAUrl = `https://dhfsvqegpyjsqiwuigen.supabase.co/storage/v1/object/public/previews/${previewPathA}`
     }
 
     // 9. Mettre à jour l'order dans Supabase
-    await supabase.from("orders").update(updates).eq("id", orderId)
+    const { error: updateError } = await supabase.from("orders").update(updates).eq("id", orderId)
+    if (updateError) {
+      console.error("DB update failed:", updateError)
+      await supabase.from("orders").update({ status: 'failed' }).eq("id", orderId)
+      return NextResponse.json({ error: "Mise a jour base de donnees echouee" }, { status: 500 })
+    }
 
     return NextResponse.json({ orderId, previewAUrl, previewBUrl }, { status: 200 })
 
