@@ -18,7 +18,6 @@ export async function restoreImage(
   const formData = new FormData()
   formData.append("model", "gpt-image-1")
   formData.append("prompt", prompt)
-  formData.append("size", "1536x1536") // TODO: Vérifier si l'API edits supporte 1536x1536
   formData.append(
     "image",
     new Blob([new Uint8Array(imageBuffer)], { type: "image/png" }),
