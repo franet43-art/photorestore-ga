@@ -73,8 +73,23 @@ export default function ResultCard({ imageUrl, resultNumber, orderId, label }: R
         {/* Overlay invisible pour bloquer les interactions directes */}
         <div className="absolute inset-0 z-10 pointer-events-none" />
         
-        <div className="absolute bottom-4 right-4 z-20 bg-black/60 backdrop-blur-md px-3 py-1 rounded text-[10px] text-white font-bold tracking-widest uppercase">
-          Aperçu Watermarqué
+        {/* Overlay texte APERÇU */}
+        <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
+          <div className="bg-black/70 px-4 py-3 text-white font-bold text-sm md:text-base text-center border border-white/30">
+            APERÇU — ACHETEZ LA VERSION HD
+          </div>
+        </div>
+        {/* Branding coin haut gauche */}
+        <div className="absolute top-3 left-3 z-30 pointer-events-none">
+          <span className="bg-black/60 text-white text-xs px-2 py-1 font-bold tracking-wider">
+            PHOTORESTORE.GA
+          </span>
+        </div>
+        {/* Bandeau bas */}
+        <div className="absolute bottom-3 left-0 right-0 z-30 pointer-events-none flex justify-center">
+          <span className="bg-black/60 text-white text-[10px] px-3 py-1 font-bold tracking-widest uppercase">
+            Aperçu Watermarqué
+          </span>
         </div>
       </CardContent>
       <CardFooter className="p-6 grid grid-cols-1 gap-3 mt-auto">
