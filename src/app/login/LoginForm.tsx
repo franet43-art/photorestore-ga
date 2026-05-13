@@ -34,7 +34,11 @@ export default function LoginForm() {
       if (error) throw error
       setIsSent(true)
     } catch (err: any) {
-      setError(err.message || "Une erreur est survenue lors de l'envoi du lien.")
+      if (err.message?.toLowerCase().includes("rate limit")) {
+        setError("Trop de tentatives. Patientez 1 heure ou vérifiez vos spams.")
+      } else {
+        setError(err.message || "Une erreur est survenue lors de l'envoi du lien.")
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -64,9 +68,9 @@ export default function LoginForm() {
   return (
     <Card className="w-full shadow-md border-slate-200">
       <CardHeader>
-        <CardTitle>Connexion</CardTitle>
+        <CardTitle>Connexion / Inscription</CardTitle>
         <CardDescription>
-          Entrez votre email pour recevoir un lien magique de connexion. Pas de mot de passe à retenir !
+          Nouveau ou déjà client ? Entrez votre email — nous vous envoyons un lien magique pour accéder instantanément à votre espace.
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleLogin}>

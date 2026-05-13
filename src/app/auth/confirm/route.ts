@@ -32,12 +32,9 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // Redirection vers l'URL spécifiée ou vers le tableau de bord
-      const redirectUrl = request.nextUrl.clone()
-      redirectUrl.pathname = next
-      redirectUrl.searchParams.delete('token_hash')
-      redirectUrl.searchParams.delete('type')
-      return NextResponse.redirect(redirectUrl)
+      // Redirection vers l'URL spécifiée ou vers la racine
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin
+      return NextResponse.redirect(`${baseUrl}${next}`)
     }
   }
 
