@@ -39,7 +39,7 @@ export default function Header() {
           </>
         ) : (
           <Link
-            href={`/login?next=${encodeURIComponent(pathname)}`}
+            href={`/login${pathname !== '/login' ? `?next=${encodeURIComponent(pathname)}` : ''}`}
             className="text-sm font-medium text-blue-600 hover:text-blue-700"
           >
             Se connecter
